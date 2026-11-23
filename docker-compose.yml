@@ -1,0 +1,29 @@
+services:
+  hashpuppy:
+    build: .
+    image: hashpuppy:latest
+    container_name: hashpuppy
+    ports:
+      - "8000:8000"
+    # Run as your own user so copied files keep sane ownership.
+    # Override with e.g. `user: "1001:1001"` to match the host.
+    user: "1000:1000"
+    volumes:
+      # Files you want to hash / copy. Use :ro for pure comparison; the
+      # "Copy & Verify" feature needs write access to its destination.
+      - ./data:/data
+      # Persistent comparison history (SQLite database).
+      - ./config:/config
+    environment:
+      - HASHPUPPY_DATA=/data
+      - HASHPUPPY_DB=/config/hashpuppy.db
+      - HASHPUPPY_ALGORITHM=sha256
+    restart: unless-stopped
+    # --- Hardening: minimal privileges --------------------------------- #
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
